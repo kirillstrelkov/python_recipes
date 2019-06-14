@@ -13,12 +13,12 @@ def get_row_dict_from_csv(path, header=None, skip_first_row=False):
             yield row
 
 
-def save_dicts(path, dicts):
+def save_dicts(path, dicts, delimiter=','):
     with codecs.open(path, 'wb', 'utf8') as f:
         writer = None
         for d in dicts:
             if d:
                 if writer is None:
-                    writer = DictWriter(f, sorted(d.keys()))
+                    writer = DictWriter(f, sorted(d.keys()), delimiter=delimiter)
                     writer.writeheader()
                 writer.writerow(d)

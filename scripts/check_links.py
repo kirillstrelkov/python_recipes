@@ -2,8 +2,6 @@ import traceback
 
 import requests
 
-from requests.auth import HTTPDigestAuth
-
 from selenium.webdriver.common.by import By
 
 from easyselenium.browser import Browser
@@ -16,8 +14,42 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
-USERNAME = 'strelkov'
-PASSWORD = 'D2hE?'
+def __get_frames(browser):
+    return browser.find_elements((By.TAG_NAME, 'frame')) + \
+           browser.find_elements((By.TAG_NAME, 'iframe'))
+
+
+def __get_links_from_current_page(browser):
+    links = []
+
+    for link in browser.find_elements((By.TAG_NAME, 'a')):
+        if browser.is_visible(link):
+            link_url = browser.get_attribute(link, 'href')
+            if link_url and link_url.startswith('http'):
+                text = browser.get_text(link)
+                links.append({'text': text, 'url': link_url})
+
+    return links
+
+
+def __get_links_from_frames(browser, frames=None):
+    links = []
+
+    if not frames:
+        frames = __get_frames(browser)
+
+    for frame in frames:
+        browser.switch_to_frame(frame)
+
+        links += __get_links_from_current_page(browser)
+
+        inner_frames = __get_frames(browser)
+        if inner_frames:
+            links += __get_links_from_frames(browser, inner_frames)
+
+    browser.switch_to_default_content()
+
+    return links
 
 
 def __get_links(url):
@@ -26,22 +58,9 @@ def __get_links(url):
     try:
         browser = Browser('gc')
         browser.get(url)
-        e_username = (By.ID, 'os_username')
-        e_password = (By.ID, 'os_password')
-        e_login_btn = (By.ID, 'loginButton')
 
-        if browser.is_visible(e_username) and browser.is_visible(e_password):
-            browser.type(e_username, USERNAME)
-            browser.type(e_password, PASSWORD)
-            browser.click(e_login_btn)
-            browser.wait_for_not_visible(e_login_btn)
-
-        for link in browser.find_elements((By.TAG_NAME, 'a')):
-            if browser.is_visible(link):
-                link_url = browser.get_attribute(link, 'href')
-                if link_url and link_url.startswith('http'):
-                    text = browser.get_text(link)
-                    links.append({'text': text, 'url': link_url})
+        links += __get_links_from_current_page(browser)
+        links += __get_links_from_frames(browser)
     except:
         try:
             browser.save_screenshot()
@@ -55,14 +74,13 @@ def __get_links(url):
 
 
 if __name__ == '__main__':
-    url = 'https://confluence.in.here.com/display/MMA3/Test+strategy'
-    # url = 'https://confluence.in.here.com/display/MMA3/Non+functional+testing'
+    url = 'https://sites.google.com/site/kirillstrelkov/home/portfolio'
 
     for link in __get_links(url):
         text = link['text']
         link_url = link['url']
         if link and link_url.startswith('http'):
-            # print("Link '{}'".format(link))
-            is_alive_link = test_url_exists(link_url, auth=HTTPDigestAuth(USERNAME, PASSWORD))
+            is_alive_link = test_url_exists(link_url)
+
             if not is_alive_link:
                 print("Link '{}' with url: '{}' alive?: {}".format(text, link_url, is_alive_link))

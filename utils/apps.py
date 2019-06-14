@@ -2,7 +2,7 @@ import os
 import subprocess
 from subprocess import Popen, PIPE
 
-from utils.file import validate_paths_exist
+from finance_utils.file import validate_paths_exist
 
 
 def call_binary(binary_name, binary_args, install_path=None, verbose=False):

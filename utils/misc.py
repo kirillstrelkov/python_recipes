@@ -1,9 +1,18 @@
 import os
+import re
 import collections
 
 from multiprocessing.pool import Pool
 
 from multiprocessing import cpu_count
+
+
+def parse_int(text):
+    found = re.findall('\d+', text)
+    if len(found) > 0:
+        return int(found[0])
+    else:
+        return None
 
 
 def print_with_prefix(message, prefix='', skip_prefix=False):
@@ -36,7 +45,7 @@ def is_win():
 
 
 def concurrent_map(func, iterable):
-    return Pool(cpu_count()).map(func, iterable)
+    return Pool(cpu_count() - 1).map(func, iterable)
 
 
 def update(d, u):
