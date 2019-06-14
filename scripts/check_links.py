@@ -17,7 +17,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 USERNAME = 'strelkov'
-PASSWORD = 'D2h3mtHhWdWU8boE?'
+PASSWORD = 'D2hE?'
 
 
 def __get_links(url):
